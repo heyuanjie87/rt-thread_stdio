@@ -1,0 +1,14 @@
+# RT-Thread building script for component
+
+from building import *
+
+cwd = GetCurrentDir()
+src = ['devfs.c']
+CPPPATH = [cwd]
+
+if GetDepend('RT_USING_PIPE'):
+    src += ['fifo.c']
+
+group = DefineGroup('Filesystem', src, depend = ['RT_USING_DFS', 'RT_USING_DFS_DEVFS'], CPPPATH = CPPPATH)
+
+Return('group')
