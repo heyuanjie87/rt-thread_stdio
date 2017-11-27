@@ -37,6 +37,9 @@
 #include <rtdef.h>
 #include <rtservice.h>
 #include <rtm.h>
+#ifdef RT_USING_DEVICE
+#include <drivers/device.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -394,47 +397,6 @@ rt_err_t rt_mq_control(rt_mq_t mq, int cmd, void *arg);
 
 /**@}*/
 
-#ifdef RT_USING_DEVICE
-/**
- * @addtogroup Device
- */
-
-/**@{*/
-
-/*
- * device (I/O) system interface
- */
-rt_device_t rt_device_find(const char *name);
-
-rt_err_t rt_device_register(rt_device_t dev,
-                            const char *name,
-                            rt_uint16_t flags);
-rt_err_t rt_device_unregister(rt_device_t dev);
-rt_err_t rt_device_init_all(void);
-
-rt_err_t
-rt_device_set_rx_indicate(rt_device_t dev,
-                          rt_err_t (*rx_ind)(rt_device_t dev, rt_size_t size));
-rt_err_t
-rt_device_set_tx_complete(rt_device_t dev,
-                          rt_err_t (*tx_done)(rt_device_t dev, void *buffer));
-
-rt_err_t  rt_device_init (rt_device_t dev);
-rt_err_t  rt_device_open (rt_device_t dev, rt_uint16_t oflag);
-rt_err_t  rt_device_close(rt_device_t dev);
-rt_size_t rt_device_read (rt_device_t dev,
-                          rt_off_t    pos,
-                          void       *buffer,
-                          rt_size_t   size);
-rt_size_t rt_device_write(rt_device_t dev,
-                          rt_off_t    pos,
-                          const void *buffer,
-                          rt_size_t   size);
-rt_err_t  rt_device_control(rt_device_t dev, int cmd, void *arg);
-
-/**@}*/
-#endif
-
 #ifdef RT_USING_MODULE
 /**
  * @addtogroup Module
@@ -519,11 +481,6 @@ rt_int32_t rt_vsnprintf(char *buf, rt_size_t size, const char *fmt, va_list args
 rt_int32_t rt_sprintf(char *buf, const char *format, ...);
 rt_int32_t rt_snprintf(char *buf, rt_size_t size, const char *format, ...);
 void rt_console_register(rt_console_t con);
-
-#if defined(RT_USING_DEVICE) && defined(RT_USING_CONSOLE)
-rt_device_t rt_console_set_device(const char *name);
-rt_device_t rt_console_get_device(void);
-#endif
 
 rt_err_t rt_get_errno(void);
 void rt_set_errno(rt_err_t no);

@@ -35,6 +35,9 @@
 
 #include <rtthread.h>
 #include <rthw.h>
+#ifdef RT_USING_DEVICE
+#include <drivers/device.h>
+#endif
 
 /* use precision */
 #define RT_PRINTF_PRECISION
@@ -1154,7 +1157,7 @@ void rt_console_register(rt_console_t con)
 	    return;
 
 #ifdef RT_USING_DEVICE
-    con->device->iscon = 1;
+    ((rt_device_t)con->device)->iscon = 1;
 #endif
 
     con->init(con);
