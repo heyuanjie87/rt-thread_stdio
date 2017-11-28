@@ -38,13 +38,10 @@
 extern "C" {
 #endif
 
-#define RT_DEVICE(device)            ((rt_device_t)device)
+#include "drivers/iocmd.h"
 
 #ifdef RT_USING_RTC
 #include "drivers/rtc.h"
-#ifdef RT_USING_ALARM
-#include "drivers/alarm.h"
-#endif
 #endif /* RT_USING_RTC */
 
 #ifdef RT_USING_SPI

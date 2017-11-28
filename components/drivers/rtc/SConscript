@@ -1,0 +1,10 @@
+from building import *
+
+cwd = GetCurrentDir() 
+src = ['rtc.c']
+
+CPPPATH = [cwd]
+
+group = DefineGroup('DeviceDrivers', src, depend = ['RT_USING_RTC'], CPPPATH = CPPPATH)
+
+Return('group')
