@@ -140,7 +140,6 @@ int dfs_file_open(struct dfs_fd *fd, const char *path, int flags)
 #else
 static char* getname(const char *path)
 {
-    int len;
     char* nm;
 
 	nm = (char*)path + rt_strlen(path);

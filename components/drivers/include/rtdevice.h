@@ -48,12 +48,8 @@ extern "C" {
 #include "drivers/spi.h"
 #endif /* RT_USING_SPI */
 
-#ifdef RT_USING_MTD_NOR
-#include "drivers/mtd_nor.h"
-#endif /* RT_USING_MTD_NOR */
-
 #ifdef RT_USING_MTD_NAND
-#include "drivers/mtd_nand.h"
+#include "drivers/nand.h"
 #endif /* RT_USING_MTD_NAND */
 
 #ifdef RT_USING_USB_DEVICE
@@ -103,7 +99,9 @@ extern "C" {
 #include "drivers/pipe.h"
 #endif
 
+#ifdef RT_USING_ADC
 #include "drivers/analog.h"
+#endif
 
 #ifdef __cplusplus
 }
