@@ -324,8 +324,7 @@ int dfs_mount(const char   *device_name,
     /* open device, but do not check the status of device */
     if (dev_id != NULL)
     {
-        if (rt_device_open(fs->dev_id,
-                           RT_DEVICE_OFLAG_RDWR) != RT_EOK)
+        if (0)//fixme
         {
             /* The underlaying device has error, clear the entry. */
             dfs_lock();
@@ -340,7 +339,7 @@ int dfs_mount(const char   *device_name,
     {
         /* close device */
         if (dev_id != NULL)
-            rt_device_close(fs->dev_id);
+            ;//fixme
 
         /* mount failed */
         dfs_lock();
@@ -403,7 +402,7 @@ int dfs_unmount(const char *specialfile)
 
     /* close device, but do not check the status of device */
     if (fs->dev_id != NULL)
-        rt_device_close(fs->dev_id);
+        ;//fixme
 
     if (fs->path != NULL)
         rt_free(fs->path);
