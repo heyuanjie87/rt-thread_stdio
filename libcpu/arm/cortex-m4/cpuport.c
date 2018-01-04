@@ -46,9 +46,9 @@ struct exception_stack_frame
 
 struct stack_frame
 {
-#if USE_FPU
-    rt_uint32_t flag;
-#endif /* USE_FPU */
+    rt_uint32_t er;
+
+    rt_uint32_t CONTROL;
 
     /* r4 ~ r11 register */
     rt_uint32_t r4;
@@ -100,6 +100,8 @@ struct exception_stack_frame_fpu
 struct stack_frame_fpu
 {
     rt_uint32_t flag;
+    
+    rt_uint32_t CONTROL;
 
     /* r4 ~ r11 register */
     rt_uint32_t r4;
@@ -145,7 +147,7 @@ rt_uint8_t *rt_hw_stack_init(void       *tentry,
 
     stk  = stack_addr + sizeof(rt_uint32_t);
     stk  = (rt_uint8_t *)RT_ALIGN_DOWN((rt_uint32_t)stk, 8);
-    stk -= sizeof(struct stack_frame);
+    stk -= (sizeof(struct stack_frame) + 64);
 
     stack_frame = (struct stack_frame *)stk;
 
@@ -164,9 +166,8 @@ rt_uint8_t *rt_hw_stack_init(void       *tentry,
     stack_frame->exception_stack_frame.pc  = (unsigned long)tentry;    /* entry point, pc */
     stack_frame->exception_stack_frame.psr = 0x01000000L;              /* PSR */
 
-#if USE_FPU
-    stack_frame->flag = 0;
-#endif /* USE_FPU */
+    stack_frame->er = 0xFFFFFFFD; //return to Thread PSP mode   
+    stack_frame->CONTROL = 0;
 
     /* return task's current stack address */
     return stk;
