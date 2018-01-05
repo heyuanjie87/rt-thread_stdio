@@ -533,6 +533,13 @@ rt_err_t rt_thread_delay(rt_tick_t tick)
 }
 RTM_EXPORT(rt_thread_delay);
 
+rt_err_t rt_thread_msleep(rt_int32_t ms)
+{
+	rt_tick_t tick = rt_tick_from_millisecond(ms);
+
+    return rt_thread_sleep(tick);
+}
+
 /**
  * This function will control thread behaviors according to control command.
  *
