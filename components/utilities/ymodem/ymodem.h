@@ -87,7 +87,7 @@ struct rym_ctx;
  * transfer and the buf will be discarded. Any other return values will cause
  * the transfer continue.
  */
-typedef enum rym_code (*rym_callback)(struct rym_ctx *ctx, rt_uint8_t *buf, rt_size_t len);
+typedef enum rym_code (*rym_callback)(struct rym_ctx *ctx, void *buf, int len);
 
 /* Currently RYM only support one transfer session(ctx) for simplicity.
  *

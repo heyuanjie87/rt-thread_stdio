@@ -9,6 +9,7 @@
 
 #include <dfs_posix.h>
 #include <poll.h>
+#include <stdlib.h>
 #include "ymodem.h"
 
 static const rt_uint16_t ccitt_table[256] = {
@@ -70,7 +71,7 @@ static enum rym_code _rym_read_code(struct rym_ctx *ctx, int timeout_ms)
 		goto out;
 
 	if (read(ctx->dev, ctx->buf, 1) == 1)
-		return *ctx->buf;
+		return (enum rym_code)*ctx->buf;
 
 out:
 
@@ -120,7 +121,7 @@ static rt_size_t _rym_putchar(struct rym_ctx *ctx, rt_uint8_t code)
 static int _rym_do_handshake(struct rym_ctx *ctx, int tm_sec)
 {
     enum rym_code code;
-    rt_size_t i;
+    int i;
     rt_uint16_t recv_crc, cal_crc;
 
     ctx->stage = RYM_STAGE_ESTABLISHING;
@@ -149,23 +150,27 @@ static int _rym_do_handshake(struct rym_ctx *ctx, int tm_sec)
         return -RYM_ERR_CRC;
 
     /* congratulations, check passed. */
-    if (ctx->on_begin && ctx->on_begin(ctx, ctx->buf+3, 128) != RYM_CODE_ACK)
-        return -RYM_ERR_CAN;
+    if (ctx->on_begin)
+    {
+		int size = 0;
+		const char *buf = (const char*)ctx->buf+3;
+
+		size = rt_strlen(buf);
+		size = atoi(buf+1 + size);
+	    if (ctx->on_begin(ctx, ctx->buf+3, size) != RYM_CODE_ACK)
+			return -RYM_ERR_CAN;
+	}
 
     return 0;
 }
 
-static rt_err_t _rym_trans_data(
-        struct rym_ctx *ctx,
-        rt_size_t data_sz,
-        enum rym_code *code)
+static int _rym_trans_data(struct rym_ctx *ctx, int data_sz, enum rym_code *code)
 {
-    const rt_size_t tsz = 2+data_sz+2;
+    const int tsz = 2+data_sz+2;
     rt_uint16_t recv_crc;
 
     /* seq + data + crc */
-    rt_size_t i = _rym_read_data(ctx, tsz);
-    if (i != tsz)
+    if (_rym_read_data(ctx, tsz) != tsz)
         return -RYM_ERR_DSZ;
 
     if ((ctx->buf[1] + ctx->buf[2]) != 0xFF)
@@ -195,10 +200,11 @@ static rt_err_t _rym_trans_data(
         *code = ctx->on_data(ctx, ctx->buf+3, data_sz);
     else
         *code = RYM_CODE_ACK;
+
     return RT_EOK;
 }
 
-static rt_err_t _rym_do_trans(struct rym_ctx *ctx)
+static int _rym_do_trans(struct rym_ctx *ctx)
 {
     _rym_putchar(ctx, RYM_CODE_ACK);
     _rym_putchar(ctx, RYM_CODE_C);
@@ -206,9 +212,9 @@ static rt_err_t _rym_do_trans(struct rym_ctx *ctx)
 
     while (1)
     {
-        rt_err_t err;
+        int err;
         enum rym_code code;
-        rt_size_t data_sz, i;
+        int data_sz, i;
 
         code = _rym_read_code(ctx, RYM_WAIT_PKG_TMS);
         switch (code)
