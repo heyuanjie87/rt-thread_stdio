@@ -79,3 +79,30 @@ static void ls(const char *pathname)
         rt_free(path);
 }
 FINSH_FUNCTION_EXPORT(ls, List information about the FILEs.);
+
+static void cat(const char* filename)
+{
+    uint32_t length;
+    char buffer[81];
+    int fd;
+
+    if ((fd = open(filename, O_RDONLY, 0)) < 0)
+    {
+        printcon("Open %s failed\n", filename);
+
+        return;
+    }
+
+    do
+    {
+        memset(buffer, 0, sizeof(buffer));
+        length = read(fd, buffer, sizeof(buffer)-1 );
+        if (length > 0)
+        {
+            printcon("%s", buffer);
+        }
+    }while (length > 0);
+
+    close(fd);
+}
+FINSH_FUNCTION_EXPORT(cat, print file);
