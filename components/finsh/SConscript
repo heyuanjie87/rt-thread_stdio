@@ -23,7 +23,6 @@ finsh_token.c
 
 msh_src = Split('''
 msh.c
-msh_cmd.c
 msh_file.c
 ''')
 
