@@ -185,7 +185,7 @@ static int dfs_romfs2_ioctl(struct dfs_fd *file, int cmd, void *args)
 
     switch (cmd)
     {
-    case XIPGFDA:
+    case FIOMMAP:
     {
         d = (struct romfs2_dirent *)file->data;
         if ((args != RT_NULL) && (d->type == ROMFS2_DIRENT_FILE))
