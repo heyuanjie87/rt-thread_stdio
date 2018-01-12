@@ -73,7 +73,7 @@ int dfs_init(void)
 #endif
     return 0;
 }
-INIT_COMPONENT_EXPORT(dfs_init);
+INIT_PREV_EXPORT(dfs_init);
 
 /**
  * this function will lock device file system.

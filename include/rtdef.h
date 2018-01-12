@@ -207,12 +207,10 @@ typedef int (*init_fn_t)(void);
 #define INIT_DEVICE_EXPORT(fn)          INIT_EXPORT(fn, "3")
 /* components initialization (dfs, lwip, ...) */
 #define INIT_COMPONENT_EXPORT(fn)       INIT_EXPORT(fn, "4")
-/* file systerm  initialization */
-#define INIT_FS_EXPORT(fn)       INIT_EXPORT(fn, "5")
 /* environment initialization (mount disk, ...) */
-#define INIT_ENV_EXPORT(fn)             INIT_EXPORT(fn, "6")
+#define INIT_ENV_EXPORT(fn)             INIT_EXPORT(fn, "5")
 /* appliation initialization (rtgui application etc ...) */
-#define INIT_APP_EXPORT(fn)             INIT_EXPORT(fn, "7")
+#define INIT_APP_EXPORT(fn)             INIT_EXPORT(fn, "6")
 
 #if !defined(RT_USING_FINSH)
 /* define these to empty, even if not include finsh.h file */

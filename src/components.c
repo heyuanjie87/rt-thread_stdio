@@ -85,7 +85,7 @@ static int rti_end(void)
 {
     return 0;
 }
-INIT_EXPORT(rti_end, "7.end");
+INIT_EXPORT(rti_end, "6.end");
 
 /**
  * RT-Thread Components Initialization for board

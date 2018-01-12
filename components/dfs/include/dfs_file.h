@@ -57,7 +57,7 @@ struct dfs_fd
     uint16_t type;               /* Type (regular or socket) */
 	char *path;                  /* Name (below mount point) */
     uint16_t ref_count;               /* Descriptor reference count */
-    uint16_t flags;              /* Descriptor flags */
+    uint32_t flags;              /* Descriptor flags */
 
     const struct dfs_file_ops *fops;
     rt_device_t dev;

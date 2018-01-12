@@ -237,5 +237,7 @@ struct winsize {
 #define SIOCDEVPRIVATE		0x89F0
 #define SIOCPROTOPRIVATE	0x89E0
 
+#define XIPGFDA    0x9000
+
 #endif
 
