@@ -82,7 +82,7 @@ FINSH_FUNCTION_EXPORT(ls, List information about the FILEs.);
 
 static void cat(const char* filename)
 {
-    uint32_t length;
+    int length;
     char buffer[81];
     int fd;
 
@@ -106,3 +106,5 @@ static void cat(const char* filename)
     close(fd);
 }
 FINSH_FUNCTION_EXPORT(cat, print file);
+
+FINSH_FUNCTION_EXPORT(mkdir, Create the DIRECTORY.);

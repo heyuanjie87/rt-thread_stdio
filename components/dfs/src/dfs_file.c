@@ -91,6 +91,7 @@ int dfs_file_open(struct dfs_fd *fd, const char *path, int flags)
     fd->size  = 0;
     fd->pos   = 0;
     fd->data  = fs;
+    fd->dev   = fs->dev_id;
 
     if (!(fs->ops->flags & DFS_FS_FLAG_FULLPATH))
     {
