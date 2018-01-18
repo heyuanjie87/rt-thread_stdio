@@ -197,6 +197,7 @@ struct finsh_shell _shell;
 int finsh_exec(rt_shell_t *shell)
 {
     int ch;
+    int pmt = 0;
 
     rt_thread_self()->parameter = shell;
 
@@ -381,12 +382,16 @@ int finsh_exec(rt_shell_t *shell)
 
                 if (shell->line_position != 0)
                     finsh_run_line(&shell->parser, shell->line);
-                else if (shell->echo_mode)
-                    printf("\n");
 #endif
             }
 
-            printf(FINSH_PROMPT);
+			if (pmt == 0 || pmt == ch)
+			{
+				putchar('\n');
+			    printf(FINSH_PROMPT);
+				pmt = ch;
+			}
+
             memset(shell->line, 0, sizeof(shell->line));
             shell->line_curpos = shell->line_position = 0;
             continue;
