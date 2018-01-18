@@ -14,7 +14,8 @@ struct rt_wqueue_node
 	rt_list_t   list;
 
 	rt_wqueue_func_t wakeup;
-	rt_uint32_t key;
+	rt_uint32_t key:31;
+	rt_uint32_t triggered:1;
 };
 typedef struct rt_wqueue_node rt_wqueue_node_t;
 
