@@ -12,7 +12,8 @@
 #include <stdlib.h>
 #include "ymodem.h"
 
-static const rt_uint16_t ccitt_table[256] = {
+static const uint16_t ccitt_table[256] = 
+{
     0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50A5, 0x60C6, 0x70E7,
     0x8108, 0x9129, 0xA14A, 0xB16B, 0xC18C, 0xD1AD, 0xE1CE, 0xF1EF,
     0x1231, 0x0210, 0x3273, 0x2252, 0x52B5, 0x4294, 0x72F7, 0x62D6,
@@ -46,9 +47,10 @@ static const rt_uint16_t ccitt_table[256] = {
     0xEF1F, 0xFF3E, 0xCF5D, 0xDF7C, 0xAF9B, 0xBFBA, 0x8FD9, 0x9FF8,
     0x6E17, 0x7E36, 0x4E55, 0x5E74, 0x2E93, 0x3EB2, 0x0ED1, 0x1EF0
 };
-rt_uint16_t CRC16(unsigned char *q, int len)
+
+uint16_t CRC16(unsigned char *q, int len)
 {
-    rt_uint16_t crc = 0;
+    uint16_t crc = 0;
 
     while (len-- > 0)
         crc = (crc << 8) ^ ccitt_table[((crc >> 8) ^ *q++) & 0xff];
@@ -82,7 +84,7 @@ out:
 static int _rym_read_data(struct rym_ctx *ctx, int len)
 {
     /* we should already have had the code */
-    rt_uint8_t *buf = ctx->buf + 1;
+    uint8_t *buf = ctx->buf + 1;
     int readlen = 0;
     struct pollfd pf;
 	int time = 500;
@@ -113,7 +115,7 @@ static int _rym_read_data(struct rym_ctx *ctx, int len)
     return readlen;
 }
 
-static rt_size_t _rym_putchar(struct rym_ctx *ctx, rt_uint8_t code)
+static int _rym_putchar(struct rym_ctx *ctx, uint8_t code)
 { 
     return write(ctx->dev, &code, sizeof(code));;
 }
@@ -128,7 +130,7 @@ static int _rym_do_handshake(struct rym_ctx *ctx, int tm_sec)
 {
     enum rym_code code;
     int i;
-    rt_uint16_t recv_crc, cal_crc;
+    uint16_t recv_crc, cal_crc;
 
     ctx->stage = RYM_STAGE_ESTABLISHING;
     /* send C every second, so the sender could know we are waiting for it. */
@@ -168,7 +170,7 @@ static int _rym_do_handshake(struct rym_ctx *ctx, int tm_sec)
 static int _rym_trans_data(struct rym_ctx *ctx, int data_sz, enum rym_code *code)
 {
     const int tsz = 2+data_sz+2;
-    rt_uint16_t recv_crc;
+    uint16_t recv_crc;
 
     /* seq + data + crc */
     if (_rym_read_data(ctx, tsz) != tsz)
@@ -211,15 +213,16 @@ static int _rym_trans_data(struct rym_ctx *ctx, int data_sz, enum rym_code *code
 
 static int _rym_do_trans(struct rym_ctx *ctx)
 {
+	int err = 0;
+
     _rym_putchar(ctx, RYM_CODE_ACK);
     _rym_putchar(ctx, RYM_CODE_C);
     ctx->stage = RYM_STAGE_ESTABLISHED;
 
     while (1)
     {
-        int err;
         enum rym_code code;
-        int data_sz, i;
+        int data_sz;
 
         code = _rym_read_code(ctx, RYM_WAIT_PKG_TMS);
         switch (code)
@@ -233,14 +236,14 @@ static int _rym_do_trans(struct rym_ctx *ctx)
         case RYM_CODE_EOT:
             return 0;
         default:
-            return -RYM_ERR_CODE;
+            err = -RYM_ERR_CODE;
+            goto _err;
         };
 
         err = _rym_trans_data(ctx, data_sz, &code);
         if (err != 0)
 		{
-			ctx->cb(&ctx->userdat, RYM_EVT_ERR, 0, 0);
-		    return err;
+            goto _err;
 		}
 
         switch (code)
@@ -248,8 +251,8 @@ static int _rym_do_trans(struct rym_ctx *ctx)
         case RYM_CODE_CAN:
             /* the spec require multiple CAN */
             _rym_cancel(ctx);
-		    ctx->cb(&ctx->userdat, RYM_EVT_ERR, 0, 0);
-            return -RYM_ERR_CAN;
+		    err = -RYM_ERR_CAN;
+            goto _err; 
         case RYM_CODE_ACK:
             _rym_putchar(ctx, RYM_CODE_ACK);
             break;
@@ -258,13 +261,18 @@ static int _rym_do_trans(struct rym_ctx *ctx)
             break;
         };
     }
+
+_err:
+    ctx->cb(&ctx->userdat, RYM_EVT_ERR, 0, 0);
+
+	return err;
 }
 
 static rt_err_t _rym_do_fin(struct rym_ctx *ctx)
 {
     enum rym_code code;
-    rt_uint16_t recv_crc;
-    rt_size_t i;
+    uint16_t recv_crc;
+    int i;
 
     ctx->stage = RYM_STAGE_FINISHING;
     /* we already got one EOT in the caller. invoke the callback if there is

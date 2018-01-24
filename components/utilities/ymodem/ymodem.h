@@ -9,11 +9,12 @@
  * 2013-04-14     Grissiom     initial implementation
  */
 
-#include "rtthread.h"
+#include <stdint.h>
 
 /* The word "RYM" is stand for "Real-YModem". */
 
-enum rym_code {
+enum rym_code 
+{
     RYM_CODE_NONE = 0x00,
     RYM_CODE_SOH  = 0x01,
     RYM_CODE_STX  = 0x02,
@@ -95,7 +96,7 @@ struct rym_ctx;
  * transfer and the buf will be discarded. Any other return values will cause
  * the transfer continue.
  */
-typedef int (*rym_notify)(long *usrdat, enum rym_event evt, char *buf, int size);
+typedef int (*rym_notify)(long *usrdat, enum rym_event evt, uint8_t *buf, int size);
 
 /* Currently RYM only support one transfer session(ctx) for simplicity.
  *
@@ -112,7 +113,7 @@ struct rym_ctx
      * happened. */
     enum rym_stage stage;
     /* user could get the error content through this */
-    char *buf;
+    uint8_t *buf;
 	long userdat;
 };
 
