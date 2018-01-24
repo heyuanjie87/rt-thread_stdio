@@ -118,6 +118,12 @@ static rt_size_t _rym_putchar(struct rym_ctx *ctx, rt_uint8_t code)
     return write(ctx->dev, &code, sizeof(code));;
 }
 
+static void _rym_cancel(struct rym_ctx *ctx)
+{
+    _rym_putchar(ctx, RYM_CODE_CAN);
+	_rym_putchar(ctx, RYM_CODE_CAN);
+}
+
 static int _rym_do_handshake(struct rym_ctx *ctx, int tm_sec)
 {
     enum rym_code code;
@@ -150,15 +156,10 @@ static int _rym_do_handshake(struct rym_ctx *ctx, int tm_sec)
         return -RYM_ERR_CRC;
 
     /* congratulations, check passed. */
-    if (ctx->on_begin)
-    {
-		int size = 0;
-		const char *buf = (const char*)ctx->buf+3;
-
-		size = rt_strlen(buf);
-		size = atoi(buf+1 + size);
-	    if (ctx->on_begin(ctx, ctx->buf+3, size) != RYM_CODE_ACK)
-			return -RYM_ERR_CAN;
+	if (ctx->cb(&ctx->userdat, RYM_EVT_BEGIN, ctx->buf+3, 128) != 0)
+	{
+	    _rym_cancel(ctx);
+		return -RYM_ERR_CAN;
 	}
 
     return 0;
@@ -185,7 +186,7 @@ static int _rym_trans_data(struct rym_ctx *ctx, int data_sz, enum rym_code *code
     if (ctx->stage == RYM_STAGE_ESTABLISHED && ctx->buf[1] == 0x00)
     {
         *code = RYM_CODE_NONE;
-        return RT_EOK;
+        return 0;
     }
 
     ctx->stage = RYM_STAGE_TRANSMITTING;
@@ -196,12 +197,16 @@ static int _rym_trans_data(struct rym_ctx *ctx, int data_sz, enum rym_code *code
         return -RYM_ERR_CRC;
 
     /* congratulations, check passed. */
-    if (ctx->on_data)
-        *code = ctx->on_data(ctx, ctx->buf+3, data_sz);
-    else
+    if (ctx->cb(&ctx->userdat, RYM_EVT_DATA, ctx->buf+3, data_sz) == 0)
+    {
         *code = RYM_CODE_ACK;
+    }
+    else
+    {
+	    *code = RYM_CODE_CAN;
+    }
 
-    return RT_EOK;
+    return 0;
 }
 
 static int _rym_do_trans(struct rym_ctx *ctx)
@@ -233,15 +238,17 @@ static int _rym_do_trans(struct rym_ctx *ctx)
 
         err = _rym_trans_data(ctx, data_sz, &code);
         if (err != 0)
-            return err;
+		{
+			ctx->cb(&ctx->userdat, RYM_EVT_ERR, 0, 0);
+		    return err;
+		}
+
         switch (code)
         {
         case RYM_CODE_CAN:
             /* the spec require multiple CAN */
-            for (i = 0; i < RYM_END_SESSION_SEND_CAN_NUM; i++) 
-		    {
-                _rym_putchar(ctx, RYM_CODE_CAN);
-            }
+            _rym_cancel(ctx);
+		    ctx->cb(&ctx->userdat, RYM_EVT_ERR, 0, 0);
             return -RYM_ERR_CAN;
         case RYM_CODE_ACK:
             _rym_putchar(ctx, RYM_CODE_ACK);
@@ -262,8 +269,8 @@ static rt_err_t _rym_do_fin(struct rym_ctx *ctx)
     ctx->stage = RYM_STAGE_FINISHING;
     /* we already got one EOT in the caller. invoke the callback if there is
      * one. */
-    if (ctx->on_end)
-        ctx->on_end(ctx, ctx->buf+3, 128);
+
+    ctx->cb(&ctx->userdat, RYM_EVT_EOT, ctx->buf+3, 128);
 
     _rym_putchar(ctx, RYM_CODE_NAK);
     code = _rym_read_code(ctx, RYM_WAIT_PKG_TMS);
@@ -325,7 +332,9 @@ static int _rym_do_recv(struct rym_ctx *ctx, int handshake_timeout)
 int rym_recv(struct rym_ctx *ctx, int handshake_timeout, const char* devname)
 {
     int res;
-
+    
+	if (ctx->cb == 0)
+		return -1;
 	ctx->dev = open(devname, O_NONBLOCK | O_RDWR, 0);
 	if (ctx->dev < 0)
 		return -1;

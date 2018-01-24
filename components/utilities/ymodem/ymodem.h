@@ -77,6 +77,14 @@ enum rym_stage
     RYM_STAGE_FINISHED,
 };
 
+enum rym_event
+{
+    RYM_EVT_BEGIN,
+	RYM_EVT_DATA,
+	RYM_EVT_EOT,
+	RYM_EVT_ERR
+};
+
 struct rym_ctx;
 /* when receiving files, the buf will be the data received from ymodem protocol
  * and the len is the data size.
@@ -87,7 +95,7 @@ struct rym_ctx;
  * transfer and the buf will be discarded. Any other return values will cause
  * the transfer continue.
  */
-typedef enum rym_code (*rym_callback)(struct rym_ctx *ctx, void *buf, int len);
+typedef int (*rym_notify)(long *usrdat, enum rym_event evt, char *buf, int size);
 
 /* Currently RYM only support one transfer session(ctx) for simplicity.
  *
@@ -96,18 +104,16 @@ typedef enum rym_code (*rym_callback)(struct rym_ctx *ctx, void *buf, int len);
  */
 struct rym_ctx
 {
-    rym_callback on_data;
-    rym_callback on_begin;
-    rym_callback on_end;
-	
+    rym_notify cb;
+
 	int dev;
 
     /* When error happened, user need to check this to get when the error has
      * happened. */
     enum rym_stage stage;
     /* user could get the error content through this */
-    rt_uint8_t *buf;
-	void *userdat;
+    char *buf;
+	long userdat;
 };
 
 /** recv a file on device dev with ymodem session ctx.
