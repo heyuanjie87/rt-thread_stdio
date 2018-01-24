@@ -108,3 +108,9 @@ static void cat(const char* filename)
 FINSH_FUNCTION_EXPORT(cat, print file);
 
 FINSH_FUNCTION_EXPORT(mkdir, Create the DIRECTORY.);
+
+static int rm(const char *name)
+{
+    return unlink(name);
+}
+FINSH_FUNCTION_EXPORT(rm, Remove(unlink) the FILE.);
