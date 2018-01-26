@@ -84,6 +84,9 @@ int rt_wqueue_wait(rt_wqueue_t *queue, int condition, int msec)
 
     /* current context checking */
     RT_DEBUG_NOT_IN_INTERRUPT;
+	if (__wait.triggered)
+		goto out;
+
     level = rt_hw_interrupt_disable();
 
 	if (!__wait.triggered)
@@ -101,13 +104,13 @@ int rt_wqueue_wait(rt_wqueue_t *queue, int condition, int msec)
 
         rt_hw_interrupt_enable(level);
         rt_schedule();
+		rt_wqueue_remove(&__wait);
 	}
 	else
 	{
 	    rt_hw_interrupt_enable(level);
 	}
 
-    rt_wqueue_remove(&__wait);
-
+out:
     return 0;
 }
