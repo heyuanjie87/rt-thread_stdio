@@ -1153,6 +1153,7 @@ RTM_EXPORT(rt_kprintf);
 
 void rt_console_register(rt_console_t con)
 {
+#ifdef RT_USING_CONSOLE
 	if (con->init == RT_NULL || con->write == RT_NULL)
 	    return;
 
@@ -1163,6 +1164,7 @@ void rt_console_register(rt_console_t con)
     con->init(con);
 
     _con = con;
+#endif
 }
 
 #ifdef RT_USING_HEAP
