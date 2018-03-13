@@ -40,7 +40,8 @@ char working_directory[DFS_PATH_MAX] = {"/"};
 
 /* device filesystem lock */
 static struct rt_mutex fslock;
-struct dfs_fd fd_table[DFS_FD_MAX];
+static struct dfs_fdtable _fdtab;
+static int dfs_fdalloc(struct dfs_fdtable *fdt, int startfd);
 
 /**
  * @addtogroup DFS
@@ -54,7 +55,7 @@ struct dfs_fd fd_table[DFS_FD_MAX];
 int dfs_init(void)
 {
     /* clean fd table */
-    memset(fd_table, 0, sizeof(fd_table));
+    memset(&_fdtab, 0, sizeof(_fdtab));
 
     /* create device filesystem lock */
     rt_mutex_init(&fslock, "fslock", RT_IPC_FLAG_FIFO);
@@ -113,21 +114,23 @@ int fd_new(int minfd)
 {
     struct dfs_fd *d;
     int idx;
+    struct dfs_fdtable *fdt;
 
+    fdt = dfs_fdtable_get();
     /* lock filesystem */
     dfs_lock();
 
     /* find an empty fd entry */
-    for (idx = minfd; idx < DFS_FD_MAX && fd_table[idx].ref_count > 0; idx++);
+    idx = dfs_fdalloc(fdt, minfd);
 
     /* can't find an empty fd entry */
-    if (idx >= DFS_FD_MAX)
+    if (idx >= fdt->maxfd)
     {
         idx = -1;
         goto __result;
     }
 
-    d = &(fd_table[idx]);
+    d = fdt->fds[idx];
     d->ref_count = 1;
     d->magic = DFS_FD_MAGIC;
 
@@ -148,12 +151,14 @@ __result:
 struct dfs_fd *fd_get(int fd)
 {
     struct dfs_fd *d;
+    struct dfs_fdtable *fdt;
 
-    if (fd < 0 || fd >= DFS_FD_MAX)
+    fdt = dfs_fdtable_get();
+    if (fd < 0 || fd >= fdt->maxfd)
         return NULL;
 
     dfs_lock();
-    d = &fd_table[fd];
+    d = fdt->fds[fd];
 
     /* check dfs_fd valid or not */
     if (d->magic != DFS_FD_MAGIC)
@@ -205,7 +210,9 @@ int fd_is_open(const char *pathname)
     unsigned int index;
     struct dfs_filesystem *fs;
     struct dfs_fd *fd;
+    struct dfs_fdtable *fdt;
 
+    fdt = dfs_fdtable_get();
     fullpath = dfs_normalize_path(NULL, pathname);
     if (fullpath != NULL)
     {
@@ -227,9 +234,9 @@ int fd_is_open(const char *pathname)
 
         dfs_lock();
 
-        for (index = 0; index < DFS_FD_MAX; index++)
+        for (index = 0; index < fdt->maxfd; index++)
         {
-            fd = &(fd_table[index]);
+            fd = fdt->fds[index];
             if (fd->fops == NULL)
                 continue;
 
@@ -403,37 +410,78 @@ up_one:
 RTM_EXPORT(dfs_normalize_path);
 #endif
 
-#include <finsh.h>
-int list_fd(void)
+/**
+ * This function will get the file descriptor table of current process.
+ */
+struct dfs_fdtable* dfs_fdtable_get(void)
 {
-	int index;
+    struct dfs_fdtable *fdt;
 
-	rt_enter_critical();
+    fdt = &_fdtab;
 
-	for (index = 0; index < DFS_FD_MAX; index ++)
-	{
-		struct dfs_fd *fd = &(fd_table[index]);
-
-		if (fd->fops)
-		{
-			rt_kprintf("--fd: %d--", index);
-			if (fd->type == FT_DIRECTORY) rt_kprintf("[dir]\n");
-			if (fd->type == FT_REGULAR)   rt_kprintf("[file]\n");
-			if (fd->type == FT_SOCKET)    rt_kprintf("[socket]\n");
-			if (fd->type == FT_USER)      rt_kprintf("[user]\n");
-			rt_kprintf("refcount=%d\n", fd->ref_count);
-			rt_kprintf("magic=0x%04x\n", fd->magic);
-			if (fd->path)
-			{
-				rt_kprintf("path: %s\n", fd->path);
-			}
-		}
-	}
-	rt_exit_critical();
-
-	return 0;
+    return fdt;
 }
-MSH_CMD_EXPORT(list_fd, list file descriptor);
 
+static int dfs_fdalloc(struct dfs_fdtable *fdt, int startfd)
+{
+    int idx;
+
+    /* find an empty fd entry */
+    for (idx = startfd; idx < fdt->maxfd; idx++)
+    {
+        if (fdt->fds[idx] == RT_NULL)
+            break;
+        if (fdt->fds[idx]->ref_count == 0)
+            break;
+    }
+    /* allocate a larger FD container */
+    if (idx == fdt->maxfd && fdt->maxfd < DFS_FD_MAX)
+    {
+        int cnt;
+        struct dfs_fd **fds;
+
+        cnt = fdt->maxfd + 4;
+        cnt = cnt > DFS_FD_MAX? DFS_FD_MAX : cnt;
+
+        fds = rt_malloc(cnt * sizeof(struct dfs_fd *));
+        if (fds == RT_NULL)
+            goto __out;
+
+        rt_memset(fds, 0, cnt * sizeof(struct dfs_fd *));
+        rt_memcpy(fds, fdt->fds, fdt->maxfd*sizeof(struct dfs_fd *));
+        rt_free(fdt->fds);
+        fdt->fds = fds;
+        fdt->maxfd = cnt;
+    }
+    /* allocate  'struct dfs_fd' */
+    if (idx < fdt->maxfd &&fdt->fds[idx] == RT_NULL)
+    {
+        fdt->fds[idx] = rt_malloc(sizeof(struct dfs_fd));
+        if (fdt->fds[idx] == RT_NULL)
+            idx = fdt->maxfd;
+    }
+
+__out:
+    return idx;
+}
+
+/**
+ * @ingroup Fd
+ *
+ * This function will free unused file descriptor.
+ */
+void fd_free(int fd)
+{
+    struct dfs_fdtable *fdt;
+
+    fdt = dfs_fdtable_get();
+
+    dfs_lock();
+    if (fdt->fds[fd]->ref_count > 0)
+        goto _out;
+    rt_free(fdt->fds[fd]);
+    fdt->fds[fd] = RT_NULL;
+_out:
+    dfs_unlock();
+}
 /*@}*/
-

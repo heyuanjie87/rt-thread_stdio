@@ -75,6 +75,12 @@
 #define DFS_F_EOF               0x04000000
 #define DFS_F_ERR               0x08000000
 
+struct dfs_fdtable
+{
+    uint32_t maxfd;
+    struct dfs_fd **fds;
+};
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -93,6 +99,9 @@ int fd_new(int minfd);
 struct dfs_fd *fd_get(int fd);
 void fd_put(struct dfs_fd *fd);
 int fd_is_open(const char *pathname);
+void fd_free(int fd);
+
+struct dfs_fdtable* dfs_fdtable_get(void);
 
 #ifdef __cplusplus
 }
