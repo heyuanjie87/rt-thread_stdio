@@ -6,6 +6,9 @@ src = Glob('src/*.c')
 cwd = GetCurrentDir()
 CPPPATH = [cwd + "/include"]
 
+if GetDepend('RT_USING_DFS_DEVONLY'):
+    SrcRemove(src, cwd + '/src/dfs_fs.c')
+
 group = DefineGroup('Filesystem', src, depend = ['RT_USING_DFS'], CPPPATH = CPPPATH)
 
 if GetDepend('RT_USING_DFS'):
