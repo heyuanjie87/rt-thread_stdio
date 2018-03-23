@@ -41,7 +41,7 @@ char working_directory[DFS_PATH_MAX] = {"/"};
 /* device filesystem lock */
 static struct rt_mutex fslock;
 static struct dfs_fdtable _fdtab;
-static int dfs_fdalloc(struct dfs_fdtable *fdt, int startfd);
+static int fd_alloc(struct dfs_fdtable *fdt, int startfd);
 
 /**
  * @addtogroup DFS
@@ -121,7 +121,7 @@ int fd_new(int minfd)
     dfs_lock();
 
     /* find an empty fd entry */
-    idx = dfs_fdalloc(fdt, minfd);
+    idx = fd_alloc(fdt, minfd);
 
     /* can't find an empty fd entry */
     if (idx >= fdt->maxfd)
@@ -422,7 +422,7 @@ struct dfs_fdtable* dfs_fdtable_get(void)
     return fdt;
 }
 
-static int dfs_fdalloc(struct dfs_fdtable *fdt, int startfd)
+static int fd_alloc(struct dfs_fdtable *fdt, int startfd)
 {
     int idx;
 
