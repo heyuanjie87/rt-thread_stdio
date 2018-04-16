@@ -64,12 +64,44 @@ static void termios_std_init(struct termios *term)
     *term = tty_std_termios;
 }
 
+static void termios_to_cfg(struct termios *term, struct serial_configure *cfg)
+{
+    if (term->c_cflag & CSTOPB)
+	{
+	    cfg->stop_bits = STOP_BITS_2;
+	}
+	else
+	{
+	    cfg->stop_bits = STOP_BITS_1;
+	}
+	
+	if (term->c_cflag & PARENB)
+	{
+	    if (term->c_cflag & PARODD)
+		{
+		    cfg->parity = PARITY_ODD;
+		}
+		else
+		{
+		    cfg->parity = PARITY_EVEN;
+		}
+	}
+	else
+	{
+	    cfg->parity = PARITY_NONE;
+	}
+	
+	cfg->data_bits = DATA_BITS_8;
+	cfg->baud_rate = term->c_speed;
+}
+
 /*
  * This function initializes serial device.
  */
 static int rt_serial_init(rt_serial_t *serial)
 {
     int ret = 0;
+    struct serial_configure cfg;
 
     /* initialize rx/tx */
     serial->rxfifo = rt_ringbuffer_create(SERIAL_FIFO_SIZE);
@@ -84,12 +116,12 @@ static int rt_serial_init(rt_serial_t *serial)
 	}
 
     termios_std_init(&serial->termcfg);
-
+    termios_to_cfg(&serial->termcfg, &cfg);
     ret = serial->ops->init(serial);
 
     /* apply configuration */
     if (serial->ops->set_termios)
-        ret = serial->ops->set_termios(serial, &serial->termcfg);
+        ret = serial->ops->set_termios(serial, &cfg);
 
 	if (ret == 0)
 		 ret =  serial->ops->control(serial, SERIAL_CTRL_RXSTART, RT_NULL);
@@ -352,11 +384,15 @@ static int rt_serial_control(struct dfs_fd *fd, int cmd, void *args)
 		*((int*)args) = rt_ringbuffer_data_len(serial->rxfifo);
 		break;
     case TCSETS:
+	{
+	    struct serial_configure cfg;
+
         tc = (struct termios*)args;
 
         serial->termcfg.c_oflag = tc->c_oflag;
-        ret = serial->ops->set_termios(serial, tc);
-        break;
+		termios_to_cfg(&serial->termcfg, &cfg);
+        ret = serial->ops->set_termios(serial, &cfg);		
+	}break;
     case TCGETS:
         tc = (struct termios*)args;
 

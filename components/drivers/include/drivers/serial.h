@@ -28,7 +28,7 @@
 #ifndef __SERIAL_H__
 #define __SERIAL_H__
 
-#include <rtdevice.h>
+#include <drivers/device.h>
 #include <termios.h>
 
 #define RT_SERIAL_EVENT_RX_IND          0x01    /* Rx indication */
@@ -41,6 +41,19 @@
 #define SERIAL_CTRL_TXSTOP     0x020000
 #define SERIAL_CTRL_RXSTART    0x030000
 #define SERIAL_CTRL_RXSTOP     0x040000
+
+#define DATA_BITS_5                     5
+#define DATA_BITS_6                     6
+#define DATA_BITS_7                     7
+#define DATA_BITS_8                     8
+#define DATA_BITS_9                     9
+
+#define STOP_BITS_1                     0
+#define STOP_BITS_2                     1
+
+#define PARITY_NONE                     0
+#define PARITY_ODD                      1
+#define PARITY_EVEN                     2
 
 struct rt_serial_device
 {
@@ -59,6 +72,15 @@ struct rt_serial_device
 };
 typedef struct rt_serial_device rt_serial_t;
 
+struct serial_configure
+{
+    rt_uint32_t baud_rate;
+
+    rt_uint8_t data_bits :4;
+    rt_uint8_t stop_bits :2;
+    rt_uint8_t parity :2;
+};
+
 /**
  * uart operators
  */
@@ -66,7 +88,7 @@ struct rt_uart_ops
 {
     int (*init)(rt_serial_t *serial);
     void (*deinit)(rt_serial_t *serial);
-    int (*set_termios)(rt_serial_t *serial, struct termios *termcfg);
+    int (*set_termios)(rt_serial_t *serial, struct serial_configure *cfg);
     int (*control)(rt_serial_t *serial, int cmd, void *arg);
     int (*putc)(rt_serial_t *serial, char c);
     int (*getc)(rt_serial_t *serial);
