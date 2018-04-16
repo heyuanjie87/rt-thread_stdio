@@ -170,11 +170,9 @@ rt_inline void rt_tick_gettime(struct timespec *ts)
     t1 = rt_ts;
     incval = rt_tick_hw_getval(&freq);
     t2 = rt_ts;
-    
-    /* nsec per tick */
-    ns = 1000000000/RT_TICK_PER_SECOND;
 
-    ns = ns*(incval/freq);
+    /* nsec per tick */
+    ns = 1000000000*(incval/freq);
 
     if ((t2.tv_sec == t1.tv_sec) && (t2.tv_nsec == t1.tv_nsec))
     {
