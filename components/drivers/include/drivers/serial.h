@@ -66,8 +66,8 @@ struct rt_uart_ops
 {
     int (*init)(rt_serial_t *serial);
     void (*deinit)(rt_serial_t *serial);
-    int (*control)(rt_serial_t *serial, int cmd, void *arg);
     int (*set_termios)(rt_serial_t *serial, struct termios *termcfg);
+    int (*control)(rt_serial_t *serial, int cmd, void *arg);
     int (*putc)(rt_serial_t *serial, char c);
     int (*getc)(rt_serial_t *serial);
 };

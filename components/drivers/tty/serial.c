@@ -136,7 +136,7 @@ static int rt_serial_close(struct dfs_fd *fd)
 static int rt_serial_read(struct dfs_fd *fd, void *buffer, size_t size)
 {
     rt_serial_t *serial;
-    size_t rxlen = 0;
+    int rxlen = 0;
     uint8_t *dbuf;
 
     if (size == 0)
@@ -263,7 +263,6 @@ rt_inline void flush_char(rt_serial_t *serial)
 static int rt_serial_write(struct dfs_fd *file, const void *buf, size_t size)
 {
     rt_serial_t *serial;
-    size_t txlen = 0;
     uint8_t *dbuf;
     int retval;
     int c;
