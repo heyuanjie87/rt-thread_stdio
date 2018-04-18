@@ -37,6 +37,27 @@ enum rt_device_class_type
     RT_Device_Class_Unknown                             /**< unknown device */
 };
 
+/**
+ * block device geometry structure
+ */
+struct rt_device_blk_geometry
+{
+    rt_uint32_t sector_count;                           /**< count of sectors */
+    rt_uint32_t bytes_per_sector;                       /**< number of bytes per sector */
+    rt_uint32_t block_size;                             /**< number of bytes to erase one block */
+};
+
+/**
+ * sector arrange struct on block device
+ */
+struct rt_device_blk_sectors
+{
+    rt_uint32_t sector_begin;                           /**< begin sector */
+    rt_uint32_t sector_end;                             /**< end sector   */
+};
+
+#define RT_DEVICE_CTRL_BLK_GETGEOME    1
+
 typedef struct rt_device *rt_device_t;
 
 struct rt_device_ops
