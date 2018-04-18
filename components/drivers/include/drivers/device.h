@@ -38,6 +38,18 @@ enum rt_device_class_type
 };
 
 typedef struct rt_device *rt_device_t;
+
+struct rt_device_ops
+{
+    /* common device interface */
+    rt_err_t  (*init)   (rt_device_t dev);
+    rt_err_t  (*open)   (rt_device_t dev, rt_uint16_t oflag);
+    rt_err_t  (*close)  (rt_device_t dev);
+    rt_size_t (*read)   (rt_device_t dev, rt_off_t pos, void *buffer, rt_size_t size);
+    rt_size_t (*write)  (rt_device_t dev, rt_off_t pos, const void *buffer, rt_size_t size);
+    rt_err_t  (*control)(rt_device_t dev, int cmd, void *args);
+};
+
 /**
  * Device structure
  */
@@ -53,17 +65,10 @@ struct rt_device
     rt_uint8_t                ref_count;                /**< reference count */
     rt_uint8_t                device_id;                /**< 0 - 255 */
 
-    /* common device interface */
-    rt_err_t  (*init)   (rt_device_t dev);
-    rt_err_t  (*open)   (rt_device_t dev, rt_uint16_t oflag);
-    rt_err_t  (*close)  (rt_device_t dev);
-    rt_size_t (*read)   (rt_device_t dev, rt_off_t pos, void *buffer, rt_size_t size);
-    rt_size_t (*write)  (rt_device_t dev, rt_off_t pos, const void *buffer, rt_size_t size);
-    rt_err_t  (*control)(rt_device_t dev, int cmd, void *args);
+    const struct rt_device_ops *dops;
 
 #if defined(RT_USING_POSIX)
     const struct dfs_file_ops *fops;
-    rt_list_t wait_queue;
 #endif
 
     void                     *user_data;                /**< device private data */

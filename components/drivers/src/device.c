@@ -56,7 +56,6 @@ rt_err_t rt_device_register(rt_device_t dev,
 
 #if defined(RT_USING_POSIX)
     dev->fops = RT_NULL;
-    rt_list_init(&(dev->wait_queue));
 #endif
 
     return RT_EOK;
@@ -139,11 +138,11 @@ rt_err_t rt_device_init(rt_device_t dev)
     RT_ASSERT(dev != RT_NULL);
 
     /* get device init handler */
-    if (dev->init != RT_NULL)
+    if (dev->dops->init != RT_NULL)
     {
         if (!(dev->flag & RT_DEVICE_FLAG_ACTIVATED))
         {
-            result = dev->init(dev);
+            result = dev->dops->init(dev);
             if (result != RT_EOK)
             {
                 rt_kprintf("To initialize device:%s failed. The error code is %d\n",
@@ -173,9 +172,9 @@ rt_err_t rt_device_control(rt_device_t dev, int cmd, void *arg)
     RT_ASSERT(dev != RT_NULL);
 
     /* call device write interface */
-    if (dev->control != RT_NULL)
+    if (dev->dops->control != RT_NULL)
     {
-        return dev->control(dev, cmd, arg);
+        return dev->dops->control(dev, cmd, arg);
     }
 
     return -RT_ENOSYS;

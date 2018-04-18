@@ -24,7 +24,7 @@
 #ifndef TERMIOS_H__
 #define TERMIOS_H__
 
-#include <rtthread.h>
+//#include <rtthread.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -91,8 +91,8 @@ struct termios {
 #define NL0    0000000
 #define NL1    0000400
 #define CRDLY  0003000
-#define CR0    0000000
-#define CR1    0001000
+//#define CR0    0000000
+//#define CR1    0001000
 #define CR2    0002000
 #define CR3    0003000
 #define TABDLY 0014000
