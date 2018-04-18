@@ -369,8 +369,6 @@ int finsh_exec(rt_shell_t *shell)
 #ifdef FINSH_USING_MSH
             if (msh_is_used() == RT_TRUE)
             {
-                if (shell->echo_mode)
-                    printf("\n");
                 msh_exec(shell->line, shell->line_position);
             }
             else
