@@ -31,9 +31,7 @@
 
 #include <sys/errno.h>
 #include <sys/types.h>
-
-struct stat;
-struct dirent;
+#include <dirent.h>
 
 struct dfs_file_ops
 {

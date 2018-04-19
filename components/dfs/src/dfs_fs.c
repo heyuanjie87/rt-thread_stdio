@@ -29,7 +29,6 @@
 #include "dfs_private.h"
 
 #include <string.h>
-#include <sys/statfs.h>
 
 #ifndef RT_USING_DFS_DEVONLY
 /**
@@ -324,7 +323,8 @@ int dfs_mount(const char   *device_name,
     /* open device, but do not check the status of device */
     if (dev_id != NULL)
     {
-        if (0)//fixme
+        if (rt_device_open(fs->dev_id,
+                           RT_DEVICE_OFLAG_RDWR) != RT_EOK)
         {
             /* The underlaying device has error, clear the entry. */
             dfs_lock();
@@ -333,7 +333,6 @@ int dfs_mount(const char   *device_name,
             goto err1;
         }
     }
-
     /* call mount of this filesystem */
     if ((*ops)->mount(fs, rwflag, data) < 0)
     {

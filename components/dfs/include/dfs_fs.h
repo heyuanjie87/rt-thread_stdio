@@ -26,12 +26,12 @@
 #define __DFS_FS_H__
 
 #include <dfs.h>
+#include <sys/statfs.h>
+#include <sys/stat.h>
 
 /* Pre-declaration */
 struct dfs_filesystem;
 struct dfs_fd;
-struct statfs;
-struct stat;
 
 /* File system operations */
 struct dfs_filesystem_ops

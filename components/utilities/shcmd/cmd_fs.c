@@ -80,6 +80,19 @@ static void ls(const char *pathname)
 }
 FINSH_FUNCTION_EXPORT(ls, List information about the FILEs.);
 
+static void cmd_ls(int argc, char **argv)
+{
+    if (argc == 1)
+	{
+	    ls("/");
+	}
+	else
+	{
+	    ls(argv[1]);
+	}
+}
+MSH_CMD_EXPORT_ALIAS(cmd_ls, ls, List information about the FILEs.);
+
 static void cat(const char* filename)
 {
     int length;

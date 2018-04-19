@@ -10,6 +10,12 @@
 #define RT_DEVICE_FLAG_REMOVABLE        0x004           /**< removable device */
 #define RT_DEVICE_FLAG_ACTIVATED        0x010           /**< device is activated */
 
+#define RT_DEVICE_OFLAG_MASK    7
+#define RT_DEVICE_OFLAG_CLOSE  0
+#define RT_DEVICE_OFLAG_OPEN    1
+#define RT_DEVICE_FLAG_STANDALONE 2
+#define RT_DEVICE_OFLAG_RDWR    3
+
 /**
  * device (I/O) class type
  */
@@ -57,6 +63,8 @@ struct rt_device_blk_sectors
 };
 
 #define RT_DEVICE_CTRL_BLK_GETGEOME    1
+#define RT_DEVICE_CTRL_BLK_ERASE    2
+#define RT_DEVICE_CTRL_BLK_SYNC    3
 
 typedef struct rt_device *rt_device_t;
 

@@ -179,3 +179,175 @@ rt_err_t rt_device_control(rt_device_t dev, int cmd, void *arg)
 
     return -RT_ENOSYS;
 }
+
+/**
+ * This function will open a device
+ *
+ * @param dev the pointer of device driver structure
+ * @param oflag the flags for device open
+ *
+ * @return the result
+ */
+rt_err_t rt_device_open(rt_device_t dev, rt_uint16_t oflag)
+{
+    rt_err_t result = RT_EOK;
+
+    RT_ASSERT(dev != RT_NULL);
+
+    /* if device is not initialized, initialize it. */
+    if (!(dev->flag & RT_DEVICE_FLAG_ACTIVATED))
+    {
+        if (dev->dops->init != RT_NULL)
+        {
+            result = dev->dops->init(dev);
+            if (result != RT_EOK)
+            {
+                rt_kprintf("To initialize device:%s failed. The error code is %d\n",
+                           dev->parent.name, result);
+
+                return result;
+            }
+        }
+
+        dev->flag |= RT_DEVICE_FLAG_ACTIVATED;
+    }
+
+    /* device is a stand alone device and opened */
+    if ((dev->flag & RT_DEVICE_FLAG_STANDALONE) &&
+        (dev->open_flag & RT_DEVICE_OFLAG_OPEN))
+    {
+        return -RT_EBUSY;
+    }
+
+    /* call device open interface */
+    if (dev->dops->open != RT_NULL)
+    {
+        result = dev->dops->open(dev, oflag);
+    }
+    else
+    {
+        /* set open flag */
+        dev->open_flag = (oflag & RT_DEVICE_OFLAG_MASK);
+    }
+
+    /* set open flag */
+    if (result == RT_EOK || result == -RT_ENOSYS)
+    {
+        dev->open_flag |= RT_DEVICE_OFLAG_OPEN;
+
+        dev->ref_count++;
+        /* don't let bad things happen silently. If you are bitten by this assert,
+         * please set the ref_count to a bigger type. */
+        RT_ASSERT(dev->ref_count != 0);
+    }
+
+    return result;
+}
+
+/**
+ * This function will close a device
+ *
+ * @param dev the pointer of device driver structure
+ *
+ * @return the result
+ */
+rt_err_t rt_device_close(rt_device_t dev)
+{
+    rt_err_t result = RT_EOK;
+
+    RT_ASSERT(dev != RT_NULL);
+
+    if (dev->ref_count == 0)
+        return -RT_ERROR;
+
+    dev->ref_count--;
+
+    if (dev->ref_count != 0)
+        return RT_EOK;
+
+    /* call device close interface */
+    if (dev->dops->close != RT_NULL)
+    {
+        result = dev->dops->close(dev);
+    }
+
+    /* set open flag */
+    if (result == RT_EOK || result == -RT_ENOSYS)
+        dev->open_flag = RT_DEVICE_OFLAG_CLOSE;
+
+    return result;
+}
+
+/**
+ * This function will read some data from a device.
+ *
+ * @param dev the pointer of device driver structure
+ * @param pos the position of reading
+ * @param buffer the data buffer to save read data
+ * @param size the size of buffer
+ *
+ * @return the actually read size on successful, otherwise negative returned.
+ *
+ * @note since 0.4.0, the unit of size/pos is a block for block device.
+ */
+rt_size_t rt_device_read(rt_device_t dev,
+                         rt_off_t    pos,
+                         void       *buffer,
+                         rt_size_t   size)
+{
+    RT_ASSERT(dev != RT_NULL);
+
+    if (dev->ref_count == 0)
+    {
+        rt_set_errno(-RT_ERROR);
+        return 0;
+    }
+
+    /* call device read interface */
+    if (dev->dops->read != RT_NULL)
+    {
+        return dev->dops->read(dev, pos, buffer, size);
+    }
+
+    /* set error code */
+    rt_set_errno(-RT_ENOSYS);
+
+    return 0;
+}
+
+/**
+ * This function will write some data to a device.
+ *
+ * @param dev the pointer of device driver structure
+ * @param pos the position of written
+ * @param buffer the data buffer to be written to device
+ * @param size the size of buffer
+ *
+ * @return the actually written size on successful, otherwise negative returned.
+ *
+ * @note since 0.4.0, the unit of size/pos is a block for block device.
+ */
+rt_size_t rt_device_write(rt_device_t dev,
+                          rt_off_t    pos,
+                          const void *buffer,
+                          rt_size_t   size)
+{
+    RT_ASSERT(dev != RT_NULL);
+
+    if (dev->ref_count == 0)
+    {
+        rt_set_errno(-RT_ERROR);
+        return 0;
+    }
+
+    /* call device write interface */
+    if (dev->dops->write != RT_NULL)
+    {
+        return dev->dops->write(dev, pos, buffer, size);
+    }
+
+    /* set error code */
+    rt_set_errno(-RT_ENOSYS);
+
+    return 0;
+}
