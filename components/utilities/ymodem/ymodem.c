@@ -7,7 +7,7 @@
  * 2013-04-14     Grissiom     initial implementation
  */
 
-#include <dfs_posix.h>
+#include <unistd.h>
 #include <poll.h>
 #include <stdlib.h>
 #include "ymodem.h"

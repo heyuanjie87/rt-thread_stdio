@@ -362,11 +362,6 @@ int finsh_exec(rt_shell_t *shell)
         /* handle end of line, break */
         if (ch == '\r' || ch == '\n')
         {
-            if (pmt == 0 || pmt == ch)
-				pmt = ch;
-			else
-				continue;
-
 #ifdef FINSH_USING_HISTORY
             shell_push_history(shell);
 #endif
@@ -390,8 +385,13 @@ int finsh_exec(rt_shell_t *shell)
 #endif
             }
 
+            if (pmt == 0 || pmt == ch)
+			{
+				pmt = ch;
 				putchar('\n');
-			    printf(FINSH_PROMPT);
+			    printf(FINSH_PROMPT);			
+			}
+
             memset(shell->line, 0, sizeof(shell->line));
             shell->line_curpos = shell->line_position = 0;
             continue;
