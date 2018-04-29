@@ -123,7 +123,7 @@ def PrepareBuilding(env, root_directory, has_libcpu=False, remove_components = [
     global Rtt_Root
 
     Env = env
-    Rtt_Root = root_directory
+    Rtt_Root = os.path.abspath(root_directory)
 
     # add compability with Keil MDK 4.6 which changes the directory of armcc.exe
     if rtconfig.PLATFORM == 'armcc':
@@ -139,6 +139,10 @@ def PrepareBuilding(env, root_directory, has_libcpu=False, remove_components = [
         env['LIBLINKPREFIX'] = ''
         env['LIBLINKSUFFIX']   = '.lib'
         env['LIBDIRPREFIX'] = '--userlibpath '
+
+    if rtconfig.PLATFORM == 'gcc':
+        if str(env['LINKFLAGS']).find('nano.specs'):
+            env.AppendUnique(CPPDEFINES = ['_REENT_SMALL'])
 
     # patch for win32 spawn
     if env['PLATFORM'] == 'win32':
@@ -274,6 +278,27 @@ def PrepareBuilding(env, root_directory, has_libcpu=False, remove_components = [
         genconfig()
         exit(0)
 
+    if env['PLATFORM'] != 'win32':
+        AddOption('--menuconfig', 
+                    dest = 'menuconfig',
+                    action = 'store_true',
+                    default = False,
+                    help = 'make menuconfig for RT-Thread BSP')
+        if GetOption('menuconfig'):
+            from menuconfig import menuconfig
+            menuconfig(Rtt_Root)
+            exit(0)
+
+    AddOption('--useconfig',
+                dest = 'useconfig',
+                type='string',
+                help = 'make rtconfig.h from config file.')
+    configfn = GetOption('useconfig')
+    if configfn:
+        from menuconfig import mk_rtconfig
+        mk_rtconfig(configfn)
+        exit(0)
+
     # add comstr option
     AddOption('--verbose',
                 dest='verbose',
@@ -291,6 +316,11 @@ def PrepareBuilding(env, root_directory, has_libcpu=False, remove_components = [
             CXXCOMSTR = 'CXX $TARGET',
             LINKCOMSTR = 'LINK $TARGET'
         )
+
+    # fix the linker for C++
+    if GetDepend('RT_USING_CPLUSPLUS'):
+        if env['LINK'].find('gcc') != -1:
+            env['LINK'] = env['LINK'].replace('gcc', 'g++')
 
     # we need to seperate the variant_dir for BSPs and the kernels. BSPs could
     # have their own components etc. If they point to the same folder, SCons
