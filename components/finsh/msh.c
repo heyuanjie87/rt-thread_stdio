@@ -367,7 +367,7 @@ static int str_common(const char *str1, const char *str2)
     return (str - str1);
 }
 
-#ifdef RT_USING_DFS
+#if (defined(RT_USING_DFS) && !defined(RT_USING_DFS_DEVONLY))
 void msh_auto_complete_path(char *path)
 {
     DIR *dir = RT_NULL;
@@ -502,7 +502,7 @@ void msh_auto_complete(char *prefix)
         return;
     }
 
-#ifdef RT_USING_DFS
+#if (defined(RT_USING_DFS) && !defined(RT_USING_DFS_DEVONLY))
     /* check whether a spare in the command */
     {
         char *ptr;
@@ -518,15 +518,6 @@ void msh_auto_complete(char *prefix)
 
             ptr --;
         }
-#ifdef RT_USING_MODULE
-        /* There is a chance that the user want to run the module directly. So
-         * try to complete the file names. If the completed path is not a
-         * module, the system won't crash anyway. */
-        if (ptr == prefix)
-        {
-            msh_auto_complete_path(ptr);
-        }
-#endif
     }
 #endif
 
