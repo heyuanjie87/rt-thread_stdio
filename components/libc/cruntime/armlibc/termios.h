@@ -93,8 +93,8 @@ struct termios {
 #define CRDLY  0003000
 //#define CR0    0000000
 //#define CR1    0001000
-#define CR2    0002000
-#define CR3    0003000
+//#define CR2    0002000
+//#define CR3    0003000
 #define TABDLY 0014000
 #define TAB0   0000000
 #define TAB1   0004000
