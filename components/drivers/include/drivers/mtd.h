@@ -1,7 +1,7 @@
 #ifndef __MTD_H__
 #define __MTD_H__
 
-#include <types.h>
+#include <stddef.h>
 #include "device.h"
 
 #define MTD_NANDFLASH    1
@@ -18,6 +18,10 @@ enum
 
 struct erase_info;
 struct mtd_oob_ops;
+
+#ifndef loff_t
+typedef long loff_t;
+#endif
 
 struct mtd_info
 {
