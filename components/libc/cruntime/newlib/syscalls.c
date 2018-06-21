@@ -7,7 +7,7 @@
 #include <dfs_posix.h>
 #endif
 
-#ifdef RT_USING_PTHREADS 
+#ifdef RT_USING_PTHREADS
 #include <pthread.h>
 #endif
 
@@ -126,7 +126,7 @@ _open_r(struct _reent *ptr, const char *file, int flags, int mode)
 #endif
 }
 
-_ssize_t 
+_ssize_t
 _read_r(struct _reent *ptr, int fd, void *buf, size_t nbytes)
 {
 #ifndef RT_USING_DFS
@@ -257,7 +257,7 @@ static void libc_system_time_init(void)
 	if (device != RT_NULL)
 	{
 		/* get realtime seconds */
-		rt_device_control(device, RT_DEVICE_CTRL_RTC_GET_TIME, &time);
+		//rt_device_control(device, RT_DEVICE_CTRL_RTC_GET_TIME, &time);
 	}
 
 	/* get tick */
@@ -378,7 +378,7 @@ void *_calloc_r (struct _reent *ptr, size_t size, size_t len)
 	return result;
 }
 
-void 
+void
 _free_r (struct _reent *ptr, void *addr)
 {
 	rt_free (addr);
@@ -397,7 +397,7 @@ _exit (int status)
 		struct rt_object *object;
 
 		rt_enter_critical();
-		
+
         /* delete all threads in the module */
         list = &module->module_object[RT_Object_Class_Thread].object_list;
         while (list->next != list)
@@ -422,14 +422,14 @@ _exit (int status)
 		rt_schedule();
 	}
 #endif
-	
+
 	rt_kprintf("thread:%s exit with %d\n", rt_thread_self()->name, status);
 	RT_ASSERT(0);
 
 	while (1);
 }
 
-void 
+void
 _system(const char *s)
 {
     /* not support this call */

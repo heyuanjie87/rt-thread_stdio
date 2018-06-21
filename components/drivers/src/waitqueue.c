@@ -10,6 +10,8 @@ void rt_wqueue_add(rt_wqueue_t *queue, struct rt_wqueue_node *node)
 {
 	rt_base_t level;
 
+    node->key = 0;
+    node->triggered = 0;
 	level = rt_hw_interrupt_disable();
 	rt_list_insert_before(queue, &(node->list));
 	rt_hw_interrupt_enable(level);
@@ -61,35 +63,26 @@ void rt_wqueue_wakeup(rt_wqueue_t *queue, void *key)
 		rt_schedule();
 }
 
-int rt_wqueue_wait(rt_wqueue_t *queue, int condition, int msec)
+int rt_wqueue_wait(rt_wqueue_t *queue, struct rt_wqueue_node *wait, int msec)
 {
     rt_thread_t tid = rt_current_thread;
     rt_timer_t  tmr = &(tid->thread_timer);
     rt_tick_t tick;
-    struct rt_wqueue_node __wait;
     rt_base_t level;
 
     tick = rt_tick_from_millisecond(msec);
 
-    if ((condition) || (tick == 0))
+    if (tick == 0)
         return 0;
-
-	__wait.polling_thread = rt_thread_self();
-	__wait.key = 0;
-	__wait.wakeup = __wqueue_default_wake;
-	__wait.triggered = 0;
-	rt_list_init(&__wait.list);
-
-    rt_wqueue_add(queue, &__wait);
 
     /* current context checking */
     RT_DEBUG_NOT_IN_INTERRUPT;
-	if (__wait.triggered)
+	if (wait->triggered)
 		goto out;
 
     level = rt_hw_interrupt_disable();
 
-	if (!__wait.triggered)
+	if (wait->triggered)
 	{
 	    rt_thread_suspend(tid);
         /* start timer */
@@ -104,7 +97,7 @@ int rt_wqueue_wait(rt_wqueue_t *queue, int condition, int msec)
 
         rt_hw_interrupt_enable(level);
         rt_schedule();
-		rt_wqueue_remove(&__wait);
+		rt_wqueue_remove(wait);
 	}
 	else
 	{
@@ -113,4 +106,11 @@ int rt_wqueue_wait(rt_wqueue_t *queue, int condition, int msec)
 
 out:
     return 0;
+}
+
+void rt_wqueue_wait_init(struct rt_wqueue_node *wait)
+{
+	wait->polling_thread = rt_thread_self();
+	wait->wakeup = __wqueue_default_wake;
+	rt_list_init(&wait->list);
 }

@@ -170,15 +170,19 @@ static int rt_serial_read(struct dfs_fd *fd, void *buffer, size_t size)
     rt_serial_t *serial;
     int rxlen = 0;
     uint8_t *dbuf;
+    struct rt_wqueue_node wait;
 
     if (size == 0)
         return 0;
 
     serial = (rt_serial_t *)fd->dev;
     dbuf = buffer;
+    rt_wqueue_wait_init(&wait);
 
     do
     {
+		rt_wqueue_add(&serial->reader_queue, &wait);
+
         rxlen += rt_ringbuffer_get(serial->rxfifo, &dbuf[rxlen], size - rxlen);
 
         if (rxlen > 0)
@@ -191,9 +195,10 @@ static int rt_serial_read(struct dfs_fd *fd, void *buffer, size_t size)
             break;
         }
 
-        rt_wqueue_wait(&serial->reader_queue, 0, -1);
+        rt_wqueue_wait(&serial->reader_queue, &wait, -1);
     }
     while (rxlen < size);
+    rt_wqueue_remove(&wait);
 
     return rxlen;
 }
@@ -298,15 +303,19 @@ static int rt_serial_write(struct dfs_fd *file, const void *buf, size_t size)
     uint8_t *dbuf;
     int retval;
     int c;
+    struct rt_wqueue_node wait;
 
     if (size == 0)
         return 0;
 
     serial = (rt_serial_t *)file->dev;
     dbuf = (uint8_t*)buf;
+    rt_wqueue_wait_init(&wait);
 
     while (1)
     {
+		rt_wqueue_add(&serial->writer_queue, &wait);
+
         if (O_OPOST(serial))
         {
             while (size > 0)
@@ -362,10 +371,11 @@ static int rt_serial_write(struct dfs_fd *file, const void *buf, size_t size)
             break;
         }
 
-        rt_wqueue_wait(&serial->writer_queue, 0, -1);
+        rt_wqueue_wait(&serial->writer_queue, &wait, -1);
     }
 
 break_out:
+    rt_wqueue_remove(&wait);
 
     return (dbuf - (uint8_t*)buf) ? dbuf - (uint8_t*)buf : retval;
 }
