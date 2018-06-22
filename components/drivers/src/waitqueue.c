@@ -82,7 +82,7 @@ int rt_wqueue_wait(rt_wqueue_t *queue, struct rt_wqueue_node *wait, int msec)
 
     level = rt_hw_interrupt_disable();
 
-	if (wait->triggered)
+	if (!wait->triggered)
 	{
 	    rt_thread_suspend(tid);
         /* start timer */
