@@ -170,19 +170,15 @@ static int rt_serial_read(struct dfs_fd *fd, void *buffer, size_t size)
     rt_serial_t *serial;
     int rxlen = 0;
     uint8_t *dbuf;
-    struct rt_wqueue_node wait;
 
     if (size == 0)
         return 0;
 
     serial = (rt_serial_t *)fd->dev;
     dbuf = buffer;
-    rt_wqueue_wait_init(&wait);
 
     do
     {
-		rt_wqueue_add(&serial->reader_queue, &wait);
-
         rxlen += rt_ringbuffer_get(serial->rxfifo, &dbuf[rxlen], size - rxlen);
 
         if (rxlen > 0)
@@ -195,10 +191,9 @@ static int rt_serial_read(struct dfs_fd *fd, void *buffer, size_t size)
             break;
         }
 
-        rt_wqueue_wait(&serial->reader_queue, &wait, -1);
+        rt_wqueue_uwait(&serial->reader_queue, -1);
     }
     while (rxlen < size);
-    rt_wqueue_remove(&wait);
 
     return rxlen;
 }
@@ -539,8 +534,8 @@ rt_err_t rt_hw_serial_register(rt_serial_t *serial,
     device->user_data   = data;
 
 
-	rt_list_init(&(serial->reader_queue));
-	rt_list_init(&(serial->writer_queue));
+	rt_wqueue_init(&(serial->reader_queue));
+	rt_wqueue_init(&(serial->writer_queue));
 
     /* register a character device */
     ret = rt_device_register(device, name, flag);
