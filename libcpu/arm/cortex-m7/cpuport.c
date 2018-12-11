@@ -206,7 +206,7 @@ void rt_hw_hard_fault_exception(struct exception_stack_frame *exception_stack)
     rt_kprintf("hard fault on thread: %s\n", rt_thread_self()->name);
 
 #ifdef RT_USING_FINSH
-    list_thread();
+    //nc list_thread();
 #endif
 
     while (1);

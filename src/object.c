@@ -93,7 +93,7 @@ static struct rt_object_information rt_object_container[RT_Object_Info_Unknown] 
     /* initialize object container - memory pool */
     {RT_Object_Class_MemPool, _OBJ_CONTAINER_LIST_INIT(RT_Object_Info_MemPool), sizeof(struct rt_mempool)},
 #endif
-#ifdef RT_USING_DEVICE
+#if 0//nc def RT_USING_DEVICE
     /* initialize object container - device */
     {RT_Object_Class_Device, _OBJ_CONTAINER_LIST_INIT(RT_Object_Info_Device), sizeof(struct rt_device)},
 #endif

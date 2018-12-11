@@ -86,8 +86,8 @@ static void shell_auto_complete(char *prefix)
 #endif
     {
 #ifndef FINSH_USING_MSH_ONLY
-        extern void list_prefix(char * prefix);
-        list_prefix(prefix);
+        //extern void list_prefix(char * prefix);
+        //list_prefix(prefix);
 #endif
     }
 

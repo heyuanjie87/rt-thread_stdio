@@ -29,6 +29,7 @@
  */
 
 #include <rtthread.h>
+#include <rtdevice.h>
 
 /**
  * This function registers a device driver with specified name.
@@ -91,7 +92,7 @@ rt_device_t rt_device_find(const char *name)
     struct rt_object *object;
     struct rt_list_node *node;
     struct rt_object_information *information;
-
+#if 0
     extern struct rt_object_information rt_object_container[];
 
     /* enter critical */
@@ -118,7 +119,7 @@ rt_device_t rt_device_find(const char *name)
     /* leave critical */
     if (rt_thread_self() != RT_NULL)
         rt_exit_critical();
-
+#endif
     /* not found */
     return RT_NULL;
 }
