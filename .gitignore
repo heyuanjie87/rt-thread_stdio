@@ -22,3 +22,15 @@ documentation/html
 *.a
 *.i
 *.d
+tools/kconfig-frontends/kconfig-mconf
+packages
+cconfig.h
+GPUCache
+
+#cscope files
+cscope.*
+ncscope.*
+
+#ctag files
+tags
+
